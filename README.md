@@ -4,10 +4,9 @@ This repository restructures the original experiment script
 [`data_process/agent_memcf_v2.py`](/home/hoangnam/Memrec/data_process/agent_memcf_v2.py)
 into a cleaner project layout with minimal changes to the underlying logic.
 
-The goal is readability and reproducibility, not a research rewrite. The core
-implementation still lives in:
-
-- [src/agent_memcf/experiment.py](/home/hoangnam/Memrec/agent_memcf_v2_repo/src/agent_memcf/experiment.py)
+The goal is readability and reproducibility, not a research rewrite. The code
+is now split by responsibility instead of leaving the entire implementation in
+one file.
 
 ## Overview
 
@@ -47,18 +46,18 @@ At a high level, the run is split into two phases:
 
 ## How this repository maps to the pipeline
 
-- `RecommendationMemorySystem`:
+- [`memory_system.py`](/home/hoangnam/Memrec/agent_memcf_v2_repo/src/agent_memcf/memory_system.py):
   chat model calls, behavior memory creation, linking, evolution, retrieval, and LLM ranking
-- `AgentCFUserState`:
-  mutable user memory used during fail-reflection and `v2` evaluation
-- `AgentCFItemState`:
-  mutable item memory used during fail-reflection and `v2` evaluation
-- `train_memory_from_fail_interactions(...)`:
-  AgentCF-style wrong-choice simulation and memory creation
-- `evaluate_user(...)`:
+- [`models.py`](/home/hoangnam/Memrec/agent_memcf_v2_repo/src/agent_memcf/models.py):
+  `BehaviorMemory`, `UserInteraction`, `AgentCFUserState`, and `AgentCFItemState`
+- [`training.py`](/home/hoangnam/Memrec/agent_memcf_v2_repo/src/agent_memcf/training.py):
+  AgentCF-style wrong-choice simulation, reflection, and memory creation
+- [`evaluation.py`](/home/hoangnam/Memrec/agent_memcf_v2_repo/src/agent_memcf/evaluation.py):
   per-user ranking and metrics for `v1` / `v2`
-- `main()`:
-  train-or-load flow, then validation/test evaluation and result export
+- [`io_utils.py`](/home/hoangnam/Memrec/agent_memcf_v2_repo/src/agent_memcf/io_utils.py):
+  dataset loading, metric helpers, result export, and agent-state persistence
+- [`experiment.py`](/home/hoangnam/Memrec/agent_memcf_v2_repo/src/agent_memcf/experiment.py):
+  top-level argument parsing, path resolution, train-or-load flow, and evaluation orchestration
 
 ## Repository layout
 
@@ -79,7 +78,12 @@ agent_memcf_v2_repo/
 │   └── agent_memcf/
 │       ├── __init__.py
 │       ├── __main__.py
-│       └── experiment.py
+│       ├── evaluation.py
+│       ├── experiment.py
+│       ├── io_utils.py
+│       ├── memory_system.py
+│       ├── models.py
+│       └── training.py
 ├── data/
 │   └── README.md
 ├── agent_memory/
@@ -134,7 +138,7 @@ python run.py \
   --eval_variants both
 ```
 
-Equivalent direct run:
+Equivalent direct run of the orchestration layer:
 
 ```bash
 python src/agent_memcf/experiment.py \
@@ -199,3 +203,4 @@ In the reported examples shown here:
 - This repository is a structural cleanup of the original script.
 - Prompt logic, memory flow, and evaluation behavior are intentionally preserved.
 - The main code-level adjustment is path resolution so the project can run from this repo root instead of the old ad hoc layout.
+- The split into `models.py`, `memory_system.py`, `training.py`, `evaluation.py`, and `io_utils.py` is organizational only.
